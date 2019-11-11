@@ -1,0 +1,193 @@
+################################################################
+######   LightGBM  #############################################
+
+mod = lgb.LGBMClassifier(num_leaves = 31,
+                        random_state = 123)
+
+
+
+param_grid = {'learning_rate': [0.01, 0.1, 1],
+             'n_estimators': [20, 40]}
+
+
+
+
+grid = GridSearchCV(estimator = mod,
+                       param_grid = param_grid,
+                   scoring = 'roc_auc',
+                   cv = 3,
+                   n_jobs = -1,
+                   verbose = 1)
+
+
+
+
+grid.fit(X_train, y_train)
+
+
+
+
+
+classifier = lgb.LGBMClassifier(random_state = 123,
+                              num_leaves = 31,
+                              learning_rate = grid.best_params_['learning_rate'],
+                              n_estimators = grid.best_params_['n_estimators'])
+
+
+classifier.fit(X_train, y_train)
+
+
+
+###############################################################
+
+y_pred = classifier.predict(X_test)
+
+y_pred_prob = classifier.predict_proba(X_test)
+
+
+
+###############################################################
+
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
+
+import scikitplot as skplt
+
+
+
+skplt.metrics.plot_confusion_matrix(y_test, y_pred)
+
+
+
+print(classification_report(y_test, y_pred))
+
+
+
+skplt.metrics.plot_roc(y_test, y_pred_prob)
+
+
+
+skplt.metrics.plot_precision_recall_curve(y_test, y_pred_prob)
+
+
+
+
+feature_import = pd.DataFrame(data = classifier.feature_importances_, index = X_test.columns.values, columns = ['values'])
+feature_import.sort_values(['values'], ascending = False, inplace = True)
+feature_import.reset_index(level = 0, inplace = True)
+
+print(feature_import)
+
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+%matplotlib inline
+
+
+
+ax = sns.barplot(x = 'values', y = 'index', data = feature_import, palette = 'deep')
+ax.set_title('Variables Imporatnce Plot of LightGBM')
+
+
+
+
+
+
+##########################################################################################
+##########################################################################################
+
+
+mod3 = lgb.LGBMClassifier(random_state = 123)
+
+
+param_grid3 = {'max_depth': [15, 20, 25, 30],
+               'num_leaves': [10, 20, 30],
+              'learning_rate': [0.01, 0.1, 0.5],
+              'n_estimator': [100, 200,300,400,500]}
+
+
+
+grid3 = GridSearchCV(estimator = mod3,
+                    param_grid = param_grid3,
+                    #categorical_feature = [0,1,2,3,4,5],
+                    scoring = 'roc_auc',
+                    cv = 3,
+                    n_jobs = -1,
+                    verbose = 1)
+
+
+
+grid3.fit(X_train, y_train,
+         categorical_feature = [0,1,2,3,4,5])
+
+
+
+
+classifier3 = lgb.LGBMClassifier(random_state = 123,
+                                max_depth = grid3.best_params_['max_depth'],
+                                 num_leaves = grid3.best_params_['num_leaves'],
+                                learning_rate = grid3.best_params_['learning_rate'],
+                                n_estimator = grid3.best_params_['n_estimator'])
+
+
+
+
+
+
+classifier3.fit(X_train, y_train,
+               categorical_feature = [0,1,2,3,4,5])
+
+
+
+
+#prediction
+
+y_pred3 = classifier3.predict(X_test)
+
+y_pred_prob_3 = classifier3.predict_proba(X_test)
+
+
+#analysis
+
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import classification_report
+from sklearn.metrics import roc_auc_score
+
+import scikitplot as skplt
+
+
+
+skplt.metrics.plot_confusion_matrix(y_test, y_pred3)
+
+skplt.metrics.plot_roc(y_test, y_pred_prob_3)
+
+skplt.metrics.plot_precision_recall_curve(y_test, y_pred_prob_3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
